@@ -8,9 +8,14 @@ class DaggerIntro:
     ### Intro
     ###
     @function
-    def container_echo(self, string_arg: str) -> dagger.Container:
+    async def container_echo(self, string_arg: str) -> str:
         """Returns a container that echoes whatever string argument is provided"""
-        return dag.container().from_("alpine:latest").with_exec(["echo", string_arg])
+        return await (
+            dag.container()
+            .from_("alpine:latest")
+            .with_exec(["echo", string_arg])
+            .stdout()
+        )
 
     @function
     async def grep_dir(self, directory_arg: dagger.Directory, pattern: str) -> str:
