@@ -18,3 +18,16 @@ basics_help:
 	
 basics_build:
 	dagger call basics build
+
+execute:
+	@set -a; \
+	[ ! -f .env ] || . ./.env; \
+	set +a; \
+	dagger call \
+		agentic \
+		--gh-token env://GH_TOKEN \
+		--agent-key env://GEMINI_API_KEY \
+		--max-iterations 20 \
+		execute \
+		--repo pmarangone/sentiment-analysis \
+		--issue-number 5

@@ -1,0 +1,68 @@
+name: Dagger Agent
+
+on:
+    workflow_dispatch:
+        inputs:
+            repo:
+                description: GitHub repo to modify, in owner/name form
+                required: true
+                type: string
+            issue_number:
+                description: GitHub issue number to resolve
+                required: true
+                type: number
+            llm_model:
+                description: Which provider and model to use, provider/model_name
+                required: false
+                default: "google/gemini-3.1-flash-lite"
+                type: string
+            max_iterations:
+                description: Maximum agent iterations
+                required: false
+                default: 20
+                type: number
+
+permissions:
+    contents: write
+    pull-requests: write
+    issues: read
+
+concurrency:
+    group: dagger-agent-${{ inputs.repo }}-${{ inputs.issue_number }}
+    cancel-in-progress: false
+
+jobs:
+    run-agent:
+        name: Resolve issue
+        runs-on: ubuntu-latest
+        environment: DAGGER_WORKFLOW
+        timeout-minutes: 360
+
+        env:
+            GITHUB_ENV: ${{ secrets.GITHUB_ENV }}
+            GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Validate secrets
+              run: |
+                  test -n "$GITHUB_ENV"
+                  test -n "$GEMINI_API_KEY"
+
+            - name: Run Dagger agent
+              uses: dagger/dagger-for-github@v8.4.0
+              with:
+                  version: "0.20.8"
+                  verb: call
+                  module: agentic
+                  args: >-
+                      --gh-token env://GITHUB_ENV
+                      --agent-key env://GEMINI_API_KEY
+                      --llm-model ${{ inputs.llm_model || '' }}
+                      --max-iterations ${{ inputs.max_iterations }}
+                      excute
+                      --repo "${{ inputs.repo }}"
+                      --issue-number ${{ inputs.issue_number }}
+                  # cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN }} # Needs an active account on dagger cloud
