@@ -8,8 +8,10 @@
 
 ## Agentic execution
 
-`gh-token` and `agent-key` are Dagger `Secret` arguments. Pass the names of
-environment variables that contain the secret values, not the raw token values:
+`gh-token` and `agent-key` are Dagger `Secret` arguments. Pass secret URIs that
+point to environment variables containing the secret values, not the raw token
+values. Use `agent-name` for the provider-specific env var name expected by the
+selected model:
 
 ```sh
 export GH_TOKEN=...
@@ -19,7 +21,25 @@ dagger call \
 	agentic \
 	--gh-token env://GH_TOKEN \
 	--agent-key env://GEMINI_API_KEY \
+	--agent-name GEMINI_API_KEY \
+	--llm-model google/gemini-3.1-flash-lite \
 	--max-iterations 20 \
+	execute \
+	--repo pmarangone/sentiment-analysis \
+	--issue-number 5
+```
+
+For another provider, change the secret env var name and model together:
+
+```sh
+export OPENAI_API_KEY=...
+
+dagger call \
+	agentic \
+	--gh-token env://GH_TOKEN \
+	--agent-key env://OPENAI_API_KEY \
+	--agent-name OPENAI_API_KEY \
+	--llm-model openai/gpt-5 \
 	execute \
 	--repo pmarangone/sentiment-analysis \
 	--issue-number 5

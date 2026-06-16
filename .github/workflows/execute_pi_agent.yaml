@@ -16,6 +16,11 @@ on:
                 required: false
                 default: "google/gemini-3.1-flash-lite"
                 type: string
+            agent_name:
+                description: Secret/env var name expected by the selected provider
+                required: false
+                default: "GEMINI_API_KEY"
+                type: string
             max_iterations:
                 description: Maximum agent iterations
                 required: false
@@ -39,8 +44,8 @@ jobs:
         timeout-minutes: 360
 
         env:
-            GITHUB_ENV: ${{ secrets.GITHUB_ENV }}
-            GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+            GH_TOKEN: ${{ secrets.GH_TOKEN }}
+            AGENT_KEY: ${{ secrets[inputs.agent_name] }}
 
         steps:
             - name: Checkout
@@ -48,8 +53,8 @@ jobs:
 
             - name: Validate secrets
               run: |
-                  test -n "$GITHUB_ENV"
-                  test -n "$GEMINI_API_KEY"
+                  test -n "$GH_TOKEN"
+                  test -n "$AGENT_KEY"
 
             - name: Run Dagger agent
               uses: dagger/dagger-for-github@v8.4.0
@@ -58,11 +63,12 @@ jobs:
                   verb: call
                   module: agentic
                   args: >-
-                      --gh-token env://GITHUB_ENV
-                      --agent-key env://GEMINI_API_KEY
-                      --llm-model ${{ inputs.llm_model || '' }}
+                      --gh-token env://GH_TOKEN
+                      --agent-key env://AGENT_KEY
+                      --agent-name ${{ inputs.agent_name }}
+                      --llm-model ${{ inputs.llm_model }}
                       --max-iterations ${{ inputs.max_iterations }}
-                      excute
+                      execute
                       --repo "${{ inputs.repo }}"
                       --issue-number ${{ inputs.issue_number }}
                   # cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN }} # Needs an active account on dagger cloud

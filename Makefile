@@ -27,6 +27,7 @@ execute:
 		agentic \
 		--gh-token env://GH_TOKEN \
 		--agent-key env://GEMINI_API_KEY \
+		--agent-name GEMINI_API_KEY \
 		--max-iterations 20 \
 		execute \
 		--repo pmarangone/sentiment-analysis \

@@ -57,14 +57,16 @@ class DaggerIntro:
         self,
         gh_token: Secret,
         agent_key: Secret,
-        max_iterations: int,
-        llm_model: str | None,
+        max_iterations: int = 3,
+        llm_model: str = "google/gemini-3.1-flash-lite",
+        agent_name: str = "GEMINI_API_KEY",
     ) -> "Agentic":
         """Access the Agentic functions"""
         return Agentic(
             gh_token=gh_token,
             agent_key=agent_key,
-            llm_model=llm_model,  # pyright: ignore[reportArgumentType]
+            agent_name=agent_name,
+            llm_model=llm_model,
             max_iterations=max_iterations,
         )
 
@@ -110,6 +112,7 @@ class Agentic:
     gh_token: Secret  # required
     agent_key: Secret  # required
 
+    agent_name: str = field(default="GEMINI_API_KEY")  # optional
     llm_model: str = field(default="google/gemini-3.1-flash-lite")  # optional
     max_iterations: int = field(default=3)  # optional
 
@@ -123,8 +126,6 @@ class Agentic:
         turn = 0
         stage = "design"
         review_feedback = ""
-
-        return "OK"
 
         # Loop continues until completed OR until the max allowed feedback loops occur
         while stage != "done" and turn < self.max_iterations:
@@ -266,10 +267,8 @@ class Agentic:
             .with_exec(["apt-get", "install", "-y", "nodejs"])
             # Install the official pi-coding-agent CLI
             .with_exec(["sh", "-c", "curl -fsSL https://pi.dev/install.sh | sh"])
-            # Provide standard Gemini Authentication Env Var globally for all agent steps
-            .with_secret_variable(
-                "GEMINI_API_KEY", self.agent_key
-            )  # TODO: accept the secret name as param, hence any combination of secret_name-secret_key-llm_model will work
+            # Provider-specific auth env var expected by the selected model.
+            .with_secret_variable(self.agent_name, self.agent_key)
             # Setup workdir
             .with_directory("/app", source)
             .with_workdir("/app")
