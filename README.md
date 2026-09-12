@@ -1,3 +1,5 @@
+hi
+
 ## In another project
 
 > dagger init --blueprint=github.com/kpenfound/blueprints/python-uv-ruff
